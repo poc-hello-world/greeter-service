@@ -117,10 +117,10 @@
         },
         "attrs": {
             "hashes": [
-                "sha256:26b54ddbbb9ee1d34d5d3668dd37d6cf74990ab23c828c2888dccdceee395594",
-                "sha256:fce7fc47dfc976152e82d53ff92fa0407700c21acd20886a13777a0d20e655dc"
+                "sha256:31b2eced602aa8423c2aea9c76a724617ed67cf9513173fd3a4f03e3a929c7e6",
+                "sha256:832aa3cde19744e49938b91fea06d69ecb9e649c93ba974535d08ad92164f700"
             ],
-            "version": "==20.2.0"
+            "version": "==20.3.0"
         },
         "bandit": {
             "hashes": [
@@ -436,11 +436,11 @@
         },
         "pytest-flask": {
             "hashes": [
-                "sha256:44948d3feab48c69e89b087129cc4db66bad9cb5aa472c08dfc798c69f4eac67",
-                "sha256:4d5678a045c07317618d80223ea124e21e8acc89dae109542dd1fdf6783d96c2"
+                "sha256:28a24a5c12778f6e2b12eaf825e71944210aaba061edbd2c3e15e3664bc15407",
+                "sha256:9c136afd6d0fb045b0b8fd2363421b6670bfebd21d9141f79669d9051c9d2d05"
             ],
             "index": "pypi",
-            "version": "==1.0.0"
+            "version": "==1.1.0"
         },
         "pyyaml": {
             "hashes": [
@@ -501,10 +501,10 @@
         },
         "toml": {
             "hashes": [
-                "sha256:926b612be1e5ce0634a2ca03470f95169cf16f939018233a670519cb4ac58b0f",
-                "sha256:bda89d5935c2eac546d648028b9901107a595863cb36bae0c73ac804a9b4ce88"
+                "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b",
+                "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"
             ],
-            "version": "==0.10.1"
+            "version": "==0.10.2"
         },
         "typing-extensions": {
             "hashes": [
