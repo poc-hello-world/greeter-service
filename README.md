@@ -26,6 +26,101 @@ For more complex demos see:
 - Istio's [BookInfo](https://istio.io/docs/examples/bookinfo/)
 - Kubernetes' [Guestbook](https://kubernetes.io/docs/tutorials/stateless-application/guestbook/)
 
+## Usage
+
+This repository is configured with support for [GitPod](https://gitpod.io) for easy development.
+
+Local application commands:
+
+```console
+poetry install # to reinstall all dependencies
+
+poetry run pytest # to run the tests
+
+poetry run gunicorn -b0.0.0.0:5002 app:app # start flask web server (if not already running)
+```
+
+Docker commands:
+
+```console
+docker run --interactive --tty --rm \
+  --publish 5002:5002 \
+  public.ecr.aws/poc-hello-world/greeter-service:latest
+```
+
+Endpoints exposed by the application:
+
+```console
+# curl -v http://localhost:5002
+  *   Trying ::1...
+  * TCP_NODELAY set
+  * Connected to localhost (::1) port 5002 (#0)
+  > GET / HTTP/1.1
+  > Host: localhost:5002
+  > User-Agent: curl/7.64.1
+  > Accept: */*
+  >
+  < HTTP/1.1 200 OK
+  < Server: gunicorn
+  < Date: Thu, 1 Apr 1000 10:10:09 GMT
+  < Connection: close
+  < Content-Type: application/json
+  < Content-Length: 21
+  < X-Reply-Service: greeter-service
+  < X-Version: dev
+  < Access-Control-Allow-Origin: *
+  <
+  * Closing connection 0
+
+  {"greeting": "hello"}
+
+# curl -v http://localhost:5002/status/alive
+  *   Trying ::1...
+  * TCP_NODELAY set
+  * Connected to localhost (::1) port 5002 (#0)
+  > GET /status/alive HTTP/1.1
+  > Host: localhost:5002
+  > User-Agent: curl/7.64.1
+  > Accept: */*
+  >
+  < HTTP/1.1 200 OK
+  < Server: gunicorn
+  < Date: Thu, 1 Apr 1000 10:10:10 GMT
+  < Connection: close
+  < Content-Type: application/json
+  < Content-Length: 38
+  < X-Reply-Service: greeter-service
+  < X-Version: dev
+  < Access-Control-Allow-Origin: *
+  <
+  * Closing connection 0
+
+  {"status": "Greeter service is alive"}
+
+# curl -v http://localhost:5002/status/healthy
+  *   Trying ::1...
+  * TCP_NODELAY set
+  * Connected to localhost (::1) port 5002 (#0)
+  > GET /status/healthy HTTP/1.1
+  > Host: localhost:5002
+  > User-Agent: curl/7.64.1
+  > Accept: */*
+  >
+  < HTTP/1.1 200 OK
+  < Server: gunicorn
+  < Date: Thu, 1 Apr 1000 10:10:11 GMT
+  < Connection: close
+  < Content-Type: application/json
+  < Content-Length: 40
+  < X-Reply-Service: greeter-service
+  < X-Version: dev
+  < Access-Control-Allow-Origin: *
+  <
+  * Closing connection 0
+
+  {"status": "Greeter service is healthy"}
+```
+
 ## Configuration and forking
 
 This repository is fork-friendly!
