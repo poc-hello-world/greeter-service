@@ -1,0 +1,40 @@
+version: 2
+
+updates:
+  # Auto-upgrade GitHub Actions versions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    labels:
+    # Add labels manually due to Dependabot secrets issues
+    # see https://github.com/dependabot/dependabot-core/issues/3253
+      - "kind/dependency"
+      - "area/automation"
+      - "bump:patch"
+
+  # Auto-upgrade Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    labels:
+      # Add labels manually due to Dependabot secrets issues
+      # see https://github.com/dependabot/dependabot-core/issues/3253
+      - "kind/dependency"
+      - "area/python"
+      - "area/automation"
+      - "bump:patch"
+
+  # Auto-upgrade Docker image tags
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    labels:
+      # Add labels manually due to Dependabot secrets issues
+      # see https://github.com/dependabot/dependabot-core/issues/3253
+      - "kind/dependency"
+      - "area/python"
+      - "area/automation"
+      - "bump:patch"

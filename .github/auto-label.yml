@@ -1,0 +1,14 @@
+bump:patch:
+  - '**'
+  - '.*'
+  - '.*/**'
+
+area/automation:
+  - .github/*
+  - .github/**/*
+  - .mergify.yml
+
+area/python:
+  - '**/*.py'
+  - 'pyproject.toml'
+  - 'poetry.lock'
