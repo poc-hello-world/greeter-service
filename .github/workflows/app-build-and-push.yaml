@@ -1,0 +1,334 @@
+name: App / Build and push
+
+env:
+  # In GitHub, go to Settings -> Secrets and set:
+  #  AWS_ACCESS_KEY_ID to your own AWS Access Key ID, eg `AKIAIOSFODNN7EXAMPLE`
+  #  AWS_SECRET_ACCESS_KEY to your own AWS Secret Access Key, eg `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY`
+  #
+  #
+  # To push to ECR Private, fill the following values:
+  AWS_ECR_PRIVATE_ACCOUNT_ID: "" # Your AWS Account ID, eg `123456789012`
+  AWS_ECR_PRIVATE_REGION: "" # Your AWS Region, eg `eu-west-2`
+  AWS_ECR_PRIVATE_REPO_NAME: "" # Your ECR Repository name, eg `example`
+  #
+  # To push to ECR Public, change the following values:
+  AWS_ECR_PUBLIC_REGISTRY_ALIAS: "poc-hello-world" # Your AWS ECR Public Registry Alias, eg `d3m0n2d4`
+  AWS_ECR_PUBLIC_REPO_NAME: "greeter-service" # Your AWS ECR Repository name, eg `example`
+
+on:
+  push:
+    paths:
+      - '.github/workflows/**'
+      - '**.py'
+      - pyproject.toml
+      - poetry.lock
+      - .dockerignore
+      - Dockerfile
+
+jobs:
+  aws_ecr_private:
+    name: Amazon ECR Private
+    runs-on: ubuntu-latest
+
+    steps:
+      # Dirty workaround since if() does not work on secrets or env
+      #  see https://github.com/actions/runner/issues/662
+      #  and https://github.com/actions/runner/issues/480
+      - name: Check if there is a need to run
+        id: job
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          if [[ -z "${AWS_ACCESS_KEY_ID}" || -z "${AWS_SECRET_ACCESS_KEY}" ]]; then
+            echo "⚠️ No AWS credentials found in GitHub -> Secrets, will not try to build and push to ECR Private"
+            echo "::set-output name=is_needed::false"
+          else
+            echo "✅ AWS credentials found, will try to build and push to ECR Private"
+
+            if [[ -z "${{ env.AWS_ECR_PRIVATE_ACCOUNT_ID }}" || -z "${{ env.AWS_ECR_PRIVATE_REGION }}  || -z "${{ env.AWS_ECR_PRIVATE_REPO_NAME }} ]]; then
+              echo "⚠️ No ECR Private customization found, will not try to build and push to ECR Private"
+              echo "::set-output name=is_needed::false"
+            else
+              echo "✅ ECR Private customization found, will try to build and push to ECR Private"
+              echo "::set-output name=is_needed::true"
+            fi
+          fi
+
+      - name: Get the code
+        if: steps.job.outputs.is_needed == 'true'
+        uses: actions/checkout@v2
+
+      - name: Bump the version for dev builds
+        if: github.ref != 'refs/heads/main' && steps.job.outputs.is_needed == 'true'
+        run: sed -i "s/APP_VERSION = 'dev'/APP_VERSION = '${{ github.sha }}'/g" app.py
+
+      - name: Bump the version based on PR labels
+        if: github.ref == 'refs/heads/main' && steps.job.outputs.is_needed == 'true'
+        id: bumpr
+        uses: haya14busa/action-bumpr@v1
+
+      - name: Bump the version for tagged builds
+        if: github.ref == 'refs/heads/main' && steps.job.outputs.is_needed == 'true'
+        run: sed -i "s/APP_VERSION = 'dev'/APP_VERSION = '${{ steps.bumpr.outputs.next_version }}'/g" app.py
+
+      - name: Prepare for container image build
+        if: steps.job.outputs.is_needed == 'true'
+        id: prepare
+        run: |
+          echo "::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+          if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
+            echo "::set-output name=version::${{ steps.bumpr.outputs.next_version }}"
+          else
+            echo "::set-output name=version::${{ github.sha }}"
+          fi
+
+          ECR_PRIVATE_SHA_TAG="${{ env.AWS_ECR_PRIVATE_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_ECR_PRIVATE_REGION }}.amazonaws.com/${{ env.AWS_ECR_PRIVATE_REPO_NAME }}:${{ github.sha }}"
+          TAGS=$ECR_PRIVATE_SHA_TAG
+          echo "🏷️ Added container tag: ${ECR_PRIVATE_SHA_TAG}"
+
+          if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
+            ECR_PRIVATE_SEMVER_TAG="${{ env.AWS_ECR_PRIVATE_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_ECR_PRIVATE_REGION }}.amazonaws.com/${{ env.AWS_ECR_PRIVATE_REPO_NAME }}:${{ steps.bumpr.outputs.next_version }}"
+            ECR_PRIVATE_LATEST_TAG="${{ env.AWS_ECR_PRIVATE_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_ECR_PRIVATE_REGION }}.amazonaws.com/${{ env.AWS_ECR_PRIVATE_REPO_NAME }}:latest"
+
+            TAGS+=", ${ECR_PRIVATE_SEMVER_TAG}, ${ECR_PRIVATE_LATEST_TAG}"
+            echo "🏷️ Added container tag: ${ECR_PRIVATE_SEMVER_TAG}"
+            echo "🏷️ Added container tag: ${ECR_PRIVATE_LATEST_TAG}"
+          fi
+
+          echo "::set-output name=tags::${TAGS}"
+          echo "🏷️ Final list of container image tags: ${TAGS}"
+
+      - name: Login to ECR Private
+        if: steps.job.outputs.is_needed == 'true'
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.AWS_ECR_PRIVATE_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_ECR_PRIVATE_REGION }}.amazonaws.com
+          username: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Set up QEMU
+        if: steps.job.outputs.is_needed == 'true'
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        if: steps.job.outputs.is_needed == 'true'
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push to AWS ECR Private
+        if: steps.job.outputs.is_needed == 'true'
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          no-cache: true # Waiting for https://github.com/docker/buildx/pull/535
+          file: ./Dockerfile
+          platforms: linux/amd64, linux/arm64
+          labels: |
+            org.opencontainers.image.title=${{ github.event.repository.name }}
+            org.opencontainers.image.vendor=${{ github.event.repository.owner.login }}
+            org.opencontainers.image.description=${{ github.event.repository.description }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}
+            org.opencontainers.image.source=${{ github.event.repository.clone_url }}
+            org.opencontainers.image.version=${{ steps.prepare.outputs.version }}
+            org.opencontainers.image.created=${{ steps.prepare.outputs.created }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
+          push: true
+          tags: ${{ steps.prepare.outputs.tags }}
+
+  aws_ecr_public:
+    name: Amazon ECR Public
+    runs-on: ubuntu-latest
+
+    steps:
+      # Dirty workaround since if() does not work on secrets or env
+      #  see https://github.com/actions/runner/issues/662
+      #  and https://github.com/actions/runner/issues/480
+      - name: Check if there is a need to run
+        id: job
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          if [[ -z "${AWS_ACCESS_KEY_ID}" || -z "${AWS_SECRET_ACCESS_KEY}" ]]; then
+            echo "⚠️ No AWS credentials found in GitHub -> Secrets, will not try to build and push to ECR Public"
+            echo "::set-output name=is_needed::false"
+          else
+            echo "✅ AWS credentials found, will try to build and push to ECR Public"
+
+            if [[ ("${{ github.repository }}" != "poc-hello-world/greeter-service") && ("${{ env.AWS_ECR_PUBLIC_REGISTRY_ALIAS}}" == "poc-hello-world") && ("${{ env.AWS_ECR_PUBLIC_REPO_NAME }}" == "test-gha" ) ]]; then
+              echo "⚠️ No ECR Public customization found, will not try to build and push to ECR Public"
+              echo "::set-output name=is_needed::false"
+            else
+              echo "✅ ECR Public customization found, will try to build and push to ECR Public"
+              echo "::set-output name=is_needed::true"
+            fi
+          fi
+
+      - name: Get the code
+        if: steps.job.outputs.is_needed == 'true'
+        uses: actions/checkout@v2
+
+      - name: Bump the version for dev builds
+        if: github.ref != 'refs/heads/main' && steps.job.outputs.is_needed == 'true'
+        run: sed -i "s/APP_VERSION = 'dev'/APP_VERSION = '${{ github.sha }}'/g" app.py
+
+      - name: Bump the version based on PR labels
+        if: github.ref == 'refs/heads/main' && steps.job.outputs.is_needed == 'true'
+        id: bumpr
+        uses: haya14busa/action-bumpr@v1
+
+      - name: Bump the version for tagged builds
+        if: github.ref == 'refs/heads/main' && steps.job.outputs.is_needed == 'true'
+        run: sed -i "s/APP_VERSION = 'dev'/APP_VERSION = '${{ steps.bumpr.outputs.next_version }}'/g" app.py
+
+      - name: Prepare for container image build
+        if: steps.job.outputs.is_needed == 'true'
+        id: prepare
+        run: |
+          echo "::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+          if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
+            echo "::set-output name=version::${{ steps.bumpr.outputs.next_version }}"
+          else
+            echo "::set-output name=version::${{ github.sha }}"
+          fi
+
+          ECR_PUBLIC_SHA_TAG="public.ecr.aws/${{ env.AWS_ECR_PUBLIC_REGISTRY_ALIAS }}/${{ env.AWS_ECR_PUBLIC_REPO_NAME }}:${{ github.sha }}"
+          TAGS=$ECR_PUBLIC_SHA_TAG
+          echo "🏷️ Added container tag: ${ECR_PUBLIC_SHA_TAG}"
+
+          if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
+            ECR_PUBLIC_SEMVER_TAG="public.ecr.aws/${{ env.AWS_ECR_PUBLIC_REGISTRY_ALIAS }}/${{ env.AWS_ECR_PUBLIC_REPO_NAME }}:${{ steps.bumpr.outputs.next_version }}"
+            ECR_PUBLIC_LATEST_TAG="public.ecr.aws/${{ env.AWS_ECR_PUBLIC_REGISTRY_ALIAS }}/${{ env.AWS_ECR_PUBLIC_REPO_NAME }}:latest"
+
+            TAGS+=", ${ECR_PUBLIC_SEMVER_TAG}, ${ECR_PUBLIC_LATEST_TAG}"
+            echo "🏷️ Added container tag: ${ECR_PUBLIC_SEMVER_TAG}"
+            echo "🏷️ Added container tag: ${ECR_PUBLIC_LATEST_TAG}"
+          fi
+
+          echo "::set-output name=tags::${TAGS}"
+          echo "🏷️ Final list of container image tags: ${TAGS}"
+
+      - name: Login to AWS ECR Public
+        if: steps.job.outputs.is_needed == 'true'
+        uses: docker/login-action@v1
+        with:
+          registry: public.ecr.aws
+          username: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Set up QEMU
+        if: steps.job.outputs.is_needed == 'true'
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        if: steps.job.outputs.is_needed == 'true'
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push to AWS ECR Public
+        if: steps.job.outputs.is_needed == 'true'
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          no-cache: true # Waiting for https://github.com/docker/buildx/pull/535
+          file: ./Dockerfile
+          platforms: linux/amd64, linux/arm64
+          labels: |
+            org.opencontainers.image.title=${{ github.event.repository.name }}
+            org.opencontainers.image.vendor=${{ github.event.repository.owner.login }}
+            org.opencontainers.image.description=${{ github.event.repository.description }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}
+            org.opencontainers.image.source=${{ github.event.repository.clone_url }}
+            org.opencontainers.image.version=${{ steps.prepare.outputs.version }}
+            org.opencontainers.image.created=${{ steps.prepare.outputs.created }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
+          push: true
+          tags: ${{ steps.prepare.outputs.tags }}
+
+  local_build_only:
+    name: Local build
+    runs-on: ubuntu-latest
+
+    steps:
+      # Dirty workaround since if() does not work on secrets
+      #  see https://github.com/actions/runner/issues/662
+      - name: Check if there is a need to run
+        id: job
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          if [[ -z "${AWS_ACCESS_KEY_ID}" || -z "${AWS_SECRET_ACCESS_KEY}" ]]; then
+            echo "✅ No AWS credentials found, will run a local build for testing"
+            echo "::set-output name=is_needed::true"
+          else
+            echo "⚠️ Found AWS credentials in GitHub -> Secrets, will not run a local build"
+            echo "::set-output name=is_needed::false"
+          fi
+
+      - name: Get the code
+        if: steps.job.outputs.is_needed == 'true'
+        uses: actions/checkout@v2
+
+      - name: Bump the version for dev builds
+        if: github.ref != 'refs/heads/main' && steps.job.outputs.is_needed == 'true'
+        run: sed -i "s/APP_VERSION = 'dev'/APP_VERSION = '${{ github.sha }}'/g" app.py
+
+      - name: Bump the version based on PR labels
+        if: github.ref == 'refs/heads/main' && steps.job.outputs.is_needed == 'true'
+        id: bumpr
+        uses: haya14busa/action-bumpr@v1
+
+      - name: Bump the version for tagged builds
+        if: github.ref == 'refs/heads/main' && steps.job.outputs.is_needed == 'true'
+        run: sed -i "s/APP_VERSION = 'dev'/APP_VERSION = '${{ steps.bumpr.outputs.next_version }}'/g" app.py
+
+      - name: Prepare for container image build
+        if: steps.job.outputs.is_needed == 'true'
+        id: prepare
+        run: |
+          echo "::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+          if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
+            echo "::set-output name=version::${{ steps.bumpr.outputs.next_version }}"
+          else
+            echo "::set-output name=version::${{ github.sha }}"
+          fi
+
+          TAGS="latest"
+          echo "🏷️ Added container tag: latest"
+
+          echo "::set-output name=tags::${TAGS}"
+          echo "🏷️ Final list of container image tags: ${TAGS}"
+
+      - name: Set up QEMU
+        if: steps.job.outputs.is_needed == 'true'
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        if: steps.job.outputs.is_needed == 'true'
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build the container image
+        if: steps.job.outputs.is_needed == 'true'
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          no-cache: true # Waiting for https://github.com/docker/buildx/pull/535
+          file: ./Dockerfile
+          platforms: linux/amd64, linux/arm64
+          labels: |
+            org.opencontainers.image.title=${{ github.event.repository.name }}
+            org.opencontainers.image.vendor=${{ github.event.repository.owner.login }}
+            org.opencontainers.image.description=${{ github.event.repository.description }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}
+            org.opencontainers.image.source=${{ github.event.repository.clone_url }}
+            org.opencontainers.image.version=${{ steps.prepare.outputs.version }}
+            org.opencontainers.image.created=${{ steps.prepare.outputs.created }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
+          push: false
+          tags: ${{ steps.prepare.outputs.tags }}

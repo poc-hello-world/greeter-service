@@ -1,0 +1,47 @@
+name: App / Test
+
+on:
+  push:
+    paths:
+      - '.github/workflows/**'
+      - '**.py'
+      - pyproject.toml
+      - poetry.lock
+      - .dockerignore
+      - Dockerfile
+jobs:
+  App:
+    name: Python tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade poetry
+          poetry install
+
+      - name: Run tests
+        run: |
+          poetry run pytest
+
+  Dockerfile:
+    name: Dockerfile linter
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v2
+
+      - name: Run hadolint
+        uses: reviewdog/action-hadolint@master
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review

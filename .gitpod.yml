@@ -1,0 +1,20 @@
+image:
+  file: .gitpod.Dockerfile
+
+ports:
+  - port: 5002
+    onOpen: open-preview
+
+tasks:
+  - init: |
+      pip install --upgrade poetry &&
+      poetry install
+    command: |
+      poetry run gunicorn -b0.0.0.0:5002 app:app
+
+  - command: ./assets/welcome.sh
+    openMode: split-right
+
+vscode:
+  extensions:
+    - ms-python.python
