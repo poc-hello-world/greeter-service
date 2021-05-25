@@ -25,6 +25,7 @@ For more complex demos see:
 - Weaveworks' and Container Solutions' [Sock Shop](https://github.com/microservices-demo/microservices-demo)
 - Istio's [BookInfo](https://istio.io/docs/examples/bookinfo/)
 - Kubernetes' [Guestbook](https://kubernetes.io/docs/tutorials/stateless-application/guestbook/)
+- The open-source, multi-language [medium.com clones](https://github.com/gothinkster/realworld)
 
 ## Usage
 
