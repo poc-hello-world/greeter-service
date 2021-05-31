@@ -26,6 +26,6 @@ jobs:
         if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
         # Skip the size label due to due to Dependabot secrets issues
         #  see https://github.com/dependabot/dependabot-core/issues/3253
-        uses: pascalgn/size-label-action@v0.4.2
+        uses: pascalgn/size-label-action@v0.4.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
