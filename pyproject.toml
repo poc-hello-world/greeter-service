@@ -13,4 +13,4 @@ Flask-Cors = "^3.0.9"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
-wemake-python-styleguide = "^0.15.2"
+wemake-python-styleguide = "^0.15.3"
