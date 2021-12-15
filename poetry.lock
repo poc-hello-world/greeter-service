@@ -597,7 +597,7 @@ python-versions = "*"
 
 [[package]]
 name = "wemake-python-styleguide"
-version = "0.15.3"
+version = "0.16.0"
 description = "The strictest and most opinionated python linter ever"
 category = "dev"
 optional = false
@@ -607,9 +607,9 @@ python-versions = ">=3.6,<4.0"
 astor = ">=0.8,<0.9"
 attrs = "*"
 darglint = ">=1.2,<2.0"
-flake8 = ">=3.7,<4.0"
+flake8 = ">=3.7,<5"
 flake8-bandit = ">=2.1,<3.0"
-flake8-broken-line = ">=0.3,<0.4"
+flake8-broken-line = ">=0.3,<0.5"
 flake8-bugbear = ">=20.1,<22.0"
 flake8-commas = ">=2.0,<3.0"
 flake8-comprehensions = ">=3.1,<4.0"
@@ -620,9 +620,9 @@ flake8-isort = ">=4.0,<5.0"
 flake8-quotes = ">=3.0,<4.0"
 flake8-rst-docstrings = ">=0.2.3,<0.3.0"
 flake8-string-format = ">=0.3,<0.4"
-pep8-naming = ">=0.11,<0.12"
+pep8-naming = ">=0.11,<0.13"
 pygments = ">=2.4,<3.0"
-typing_extensions = ">=3.6,<4.0"
+typing_extensions = ">=3.6,<5.0"
 
 [[package]]
 name = "werkzeug"
@@ -638,7 +638,7 @@ watchdog = ["watchdog"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "d46b72c752dfddb7c64c65641e73e11c414a17f400eea432fe74c7335864dc21"
+content-hash = "b81cd6c52534ae203534d5a10021b5be583a1f914647d2007833bdf4bb5b8205"
 
 [metadata.files]
 astor = [
@@ -918,8 +918,8 @@ typing-extensions = [
     {file = "typing_extensions-3.7.4.3.tar.gz", hash = "sha256:99d4073b617d30288f569d3f13d2bd7548c3a7e4c8de87db09a9d29bb3a4a60c"},
 ]
 wemake-python-styleguide = [
-    {file = "wemake-python-styleguide-0.15.3.tar.gz", hash = "sha256:8b89aedabae67b7b915908ed06c178b702068137c0d8afe1fb59cdc829cd2143"},
-    {file = "wemake_python_styleguide-0.15.3-py3-none-any.whl", hash = "sha256:a382f6c9ec87d56daa08a11e47cab019c99b384f1393b32564ebc74c6da80441"},
+    {file = "wemake-python-styleguide-0.16.0.tar.gz", hash = "sha256:3bf0a4962404e6fd6fa479e72e2ba3fb75d5920ea6c44b72b45240c9e519543c"},
+    {file = "wemake_python_styleguide-0.16.0-py3-none-any.whl", hash = "sha256:8caa92b4aa77b08a505d718553238812d1b612b1036bc171ca3aa18345efe0b4"},
 ]
 werkzeug = [
     {file = "Werkzeug-2.0.0-py3-none-any.whl", hash = "sha256:64c02f6495ba01eddd6625b3675f357cd358a73f1e38458a56ad86c5baa30b53"},
