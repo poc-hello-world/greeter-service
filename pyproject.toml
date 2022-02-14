@@ -12,5 +12,5 @@ gunicorn = "^20.1.0"
 Flask-Cors = "^3.0.9"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2"
+pytest = "^7.0"
 wemake-python-styleguide = "^0.16.0"
