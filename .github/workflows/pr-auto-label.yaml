@@ -10,7 +10,7 @@ jobs:
 
     steps:
       - name: Get the code
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Attach content labels
         # Labels are added manually in .github/dependabot.yml
