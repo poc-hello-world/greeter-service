@@ -1,4 +1,4 @@
-FROM python:3.11.0rc2
+FROM python:3.11.0
 
 RUN pip install poetry
 
