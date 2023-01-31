@@ -118,7 +118,7 @@ jobs:
 
       - name: Build and push to AWS ECR Private
         if: steps.job.outputs.is_needed == 'true'
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           cache-from: type=gha
@@ -230,7 +230,7 @@ jobs:
 
       - name: Build and push to AWS ECR Public
         if: steps.job.outputs.is_needed == 'true'
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           cache-from: type=gha
@@ -316,7 +316,7 @@ jobs:
 
       - name: Build the container image
         if: steps.job.outputs.is_needed == 'true'
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           cache-from: type=gha
