@@ -368,18 +368,17 @@ dotenv = ["python-dotenv"]
 
 [[package]]
 name = "flask-cors"
-version = "3.0.10"
+version = "4.0.0"
 description = "A Flask extension adding a decorator for CORS support"
 optional = false
 python-versions = "*"
 files = [
-    {file = "Flask-Cors-3.0.10.tar.gz", hash = "sha256:b60839393f3b84a0f3746f6cdca56c1ad7426aa738b70d6c61375857823181de"},
-    {file = "Flask_Cors-3.0.10-py2.py3-none-any.whl", hash = "sha256:74efc975af1194fc7891ff5cd85b0f7478be4f7f59fe158102e91abb72bb4438"},
+    {file = "Flask-Cors-4.0.0.tar.gz", hash = "sha256:f268522fcb2f73e2ecdde1ef45e2fd5c71cc48fe03cffb4b441c6d1b40684eb0"},
+    {file = "Flask_Cors-4.0.0-py2.py3-none-any.whl", hash = "sha256:bc3492bfd6368d27cfe79c7821df5a8a319e1a6d5eab277a3794be19bdc51783"},
 ]
 
 [package.dependencies]
 Flask = ">=0.9"
-Six = "*"
 
 [[package]]
 name = "gitdb"
@@ -934,4 +933,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "67cb9d44fc6b0d5ded2dba59a7b710d1e6920c6bc0ead420d5d0d5340d7ab6f3"
+content-hash = "67000120de79bb12b23ca687b98cc99af08ce957504c3ee0618d384e0bb52762"
