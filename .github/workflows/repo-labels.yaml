@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Get the code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Manage labels
         uses: micnncim/action-label-syncer@v1
